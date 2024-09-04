@@ -69,7 +69,7 @@ def compute_metrics(test_df, cand_path, name):
         })
 
     rouge_results_df = pd.DataFrame(rouge_results_list)
-    rouge_results_df.to_csv(f"test_rouge_{name}.csv", index=False)
+    rouge_results_df.to_csv(os.path.join("metrics", "ROUGE", f"{name}.csv"), index=False)
 
     ###################################################################################################
 
@@ -87,7 +87,7 @@ def compute_metrics(test_df, cand_path, name):
             bertscore_results_list.append({'PAIR_ID': pair_id, 'P': P, 'R': R, 'F1': F1})
 
     bertscore_results_df = pd.DataFrame(bertscore_results_list)
-    bertscore_results_df.to_csv(f'test_bertscore_{name}.csv', index=False)
+    bertscore_results_df.to_csv(os.path.join("metrics", "BERT_score", f"{name}.csv"), index=False)
 
     ###################################################################################################
 
@@ -140,7 +140,7 @@ def compute_metrics(test_df, cand_path, name):
         medcon_results_list.append({'PAIR_ID': pair_id, 'Precision': precision, 'Recall': recall})
 
     medcon_results_df = pd.DataFrame(medcon_results_list)
-    medcon_results_df.to_csv(f'test_medcon_{name}.csv', index=False)
+    medcon_results_df.to_csv(os.path.join("metrics", "MEDCON", f"{name}.csv"), index=False)
 
     ###################################################################################################
 
