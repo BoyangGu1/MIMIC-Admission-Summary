@@ -1,3 +1,21 @@
+physionet.org/
+dataset/
+constants/
+DPO_rejected_summary/
+inference/
+medcat_model/
+metrics/
+outputs/
+quickumls_install/
+umls-2024AA/
+unsloth_DPO_models/
+unsloth_SFT_models/
+vllm_DPO_models/
+vllm_SFT_models/
+*.json
+temp.sh
+DPO_rejected_prep.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
