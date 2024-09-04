@@ -6,6 +6,27 @@ This repository is served for the presentation and reproduction of the master th
 
 1. Clone this repository: `git clone https://github.com/BoyangGu1/MIMIC-Admission-Summary.git`.
 
+2. Run the following commands:
+
+    ```
+    cd MIMIC-Admission-Summary
+    mkdir dataset
+    mkdir DPO_rejected_summary
+    mkdir inference
+    mkdir medcat_model
+    mkdir metrics
+    mkdir metrics/BERT_score
+    mkdir metrics/MEDCON
+    mkdir metrics/ROUGE
+    mkdir outputs
+    mkdir quickumls_install
+    mkdir umls-2024AA
+    mkdir unsloth_DPO_models
+    mkdir unsloth_SFT_models
+    mkdir vllm_DPO_models
+    mkdir vllm_SFT_models
+    ```
+
 2. Follow the instructions at https://mimic.mit.edu/docs/gettingstarted/ and download the MIMIC-III database from https://physionet.org/content/mimiciii/1.4/ then put it under the repository directory.
 
 3. Install the virtual environment via Anaconda: 
