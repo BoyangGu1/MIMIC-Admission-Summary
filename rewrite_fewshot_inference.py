@@ -117,8 +117,8 @@ def main():
     assert is_valid_cuda_visible_devices, "Invalid CUDA_VISIBLE_DEVICES value"
 
     # TODO uncomment it
-    # if len(os.listdir(save_medcat_extraction_path)) != len(os.listdir(ref_summary_path)):
-    #     raise ValueError(f"The number of files in the reference summary path and the save_medcat_extraction_path should be the same, but {len(os.listdir(save_medcat_extraction_path))} is not {len(os.listdir(ref_summary_path))}. Run the medcat_extraction.py first.")
+    if len(os.listdir(save_medcat_extraction_path)) != len(os.listdir(ref_summary_path)):
+        raise ValueError(f"The number of files in the reference summary path and the save_medcat_extraction_path should be the same, but {len(os.listdir(save_medcat_extraction_path))} is not {len(os.listdir(ref_summary_path))}. Run the medcat_extraction.py first.")
 
     if not (os.path.exists(os.path.join(save_mask_dfs_save_path, f"medcat_extraction_{save_mask_dfs_save_name}_mask_one.csv"))
             and os.path.exists(os.path.join(save_mask_dfs_save_path, f"medcat_extraction_{save_mask_dfs_save_name}_mask_all.csv"))):
