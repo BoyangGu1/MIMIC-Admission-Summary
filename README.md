@@ -1,6 +1,6 @@
 # MIMIC-Admission-Summary
 
-This repository is served for the presentation and reproduction of the master thesis of Boyang Gu. The project developed a comprehensice dataset for brief hospital course summarization and trained several models that achieve good performance.
+This repository is served for the presentation and reproduction of the master thesis of Boyang Gu. The project developed a comprehensice dataset for brief hospital course summarization and trained several models that achieve SOTA performance.
 
 ## Setup
 
@@ -89,11 +89,11 @@ By the restriction of the license of MIMIC database, we cannot provide the proce
 
 1. Preprocess the MIMIC-III dataset:
 
-```
-conda activate mimic_env
-python general_data_preparation.py
-python one_admission_data_prep.py
-```
+    ```
+    conda activate mimic_env
+    python general_data_preparation.py
+    python one_admission_data_prep.py
+    ```
 
 2. Model training:
 
@@ -125,7 +125,7 @@ python one_admission_data_prep.py
 
     You can change `dpo_para1.json` into `dpo_para2.json`, `dpo_para3.json`, `dpo_para4.json`, or `dpo_para5.json` to train different models. `DPO_rejected_prep.py` supports multi-GPU settings so feel free to change the `gpus` argument to `0,1,2,3,4,5,6,7` for example. Sometimes due to different cuda initialization method, you may need to set `CUDA_VISIBLE_DEVICES` first to ensure multi-GPU inference (e.g., `CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` for example).
 
-4. Inference for the trained models (`sft_para1` for example):
+3. Inference for the trained models (`sft_para1` for example):
 
     ```
     conda activate unsloth_env
@@ -144,7 +144,7 @@ python one_admission_data_prep.py
 
     The inferece supports multi-GPU settings too.
 
-5. Zero-shot inference:
+4. Zero-shot inference:
 
     ```
     conda activate vllm_env
@@ -156,51 +156,51 @@ python one_admission_data_prep.py
 
     The inferece supports multi-GPU settings too.
 
-6. Cloze-form rewriting:
+5. Cloze-form rewriting:
 
-    6.1 MedCAT extraction:
+    5.1 MedCAT extraction:
 
-    ```
-    conda activate mimic_env
-    python medcat_extraction.py \
-        --dataset_path dataset/mimic-iii/by_hpc/train_val.csv \
-        --save_path dataset/mimic-iii/by_hpc/medcat_extraction_train_val 
-    python medcat_extraction.py \
-        --dataset_path dataset/mimic-iii/by_hpc/test.csv \
-        --save_path dataset/mimic-iii/by_hpc/medcat_extraction_test
-    ```
+        ```
+        conda activate mimic_env
+        python medcat_extraction.py \
+            --dataset_path dataset/mimic-iii/by_hpc/train_val.csv \
+            --save_path dataset/mimic-iii/by_hpc/medcat_extraction_train_val 
+        python medcat_extraction.py \
+            --dataset_path dataset/mimic-iii/by_hpc/test.csv \
+            --save_path dataset/mimic-iii/by_hpc/medcat_extraction_test
+        ```
 
-    6.2 Training datasets preparation:
+    5.2 Training datasets preparation:
 
-    ```
-    conda activate mimic_env
-    python rewrite_cloze_data_prep.py \
-        --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/train.csv \
-        --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_train_val \
-        --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
-        --save_name train
-    python rewrite_cloze_data_prep.py \
-        --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/val.csv \
-        --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_train_val \
-        --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
-        --save_name val
-    python rewrite_cloze_data_prep.py \
-        --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/test.csv \
-        --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_test \
-        --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
-        --save_name test
-    ```
+        ```
+        conda activate mimic_env
+        python rewrite_cloze_data_prep.py \
+            --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/train.csv \
+            --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_train_val \
+            --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
+            --save_name train
+        python rewrite_cloze_data_prep.py \
+            --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/val.csv \
+            --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_train_val \
+            --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
+            --save_name val
+        python rewrite_cloze_data_prep.py \
+            --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/test.csv \
+            --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_test \
+            --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
+            --save_name test
+        ```
 
-    6.3 SFT-based rewriting training:
+    5.3 SFT-based rewriting training:
 
-    ```
-    conda activate unsloth_env
-    python rewrite_SFT_train.py rewrite_SFT_training_paras/rewrite_sft_para1.json
-    ```
+        ```
+        conda activate unsloth_env
+        python rewrite_SFT_train.py rewrite_SFT_training_paras/rewrite_sft_para1.json
+        ```
 
-    6.4 Rewriting inference:
-
-        6.4.1 SFT-based rewriting (use `rewrite_sft_para1` to rewrite `sft_para1' for example):
+    5.4 Rewriting inference:
+    
+    5.4.1 SFT-based rewriting (use `rewrite_sft_para1` to rewrite `sft_para1' for example):
 
         ```
         conda activate unsloth_env
@@ -225,7 +225,7 @@ python one_admission_data_prep.py
             --save_rewrite_response_name rewrite_responses/mimic-iii/by_hpc/sft_para1_maskall_with_rewrited_by_rewrite_para1
         ```
 
-        6.4.2 Few-shot training-free rewriting (rewriting `sft_para1` for example):
+    5.4.2 Few-shot training-free rewriting (rewriting `sft_para1` for example):
 
         ```
         conda activate vllm_env
@@ -242,7 +242,7 @@ python one_admission_data_prep.py
 
     The inferece supports multi-GPU settings too.
 
-7. Compute metrics (`sft_para1` for example):
+6. Compute metrics (`sft_para1` for example):
 
     ```
     conda activate mimic_env
