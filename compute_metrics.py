@@ -48,8 +48,11 @@ def compute_metrics(test_df, cand_path, name):
         ref_result = row["SUMMARY"]
         pair_id = row["PAIR_ID"]
         
-        with open(os.path.join(cand_path, f"{pair_id}.txt")) as file:
-            generated_text = file.read()
+        try:
+            with open(os.path.join(cand_path, f"{pair_id}.txt")) as file:
+                generated_text = file.read()
+        except:
+            continue
         
         # Calculate ROUGE scores
         scores = scorer.score(ref_result, generated_text)
@@ -79,8 +82,12 @@ def compute_metrics(test_df, cand_path, name):
     for i, row in tqdm(test_df.iterrows(), total=len(test_df), desc='Calculating BERTScore'):
         ref_summary = row['SUMMARY']
         pair_id = row['PAIR_ID']
-        with open(os.path.join(cand_path, f"{pair_id}.txt"), 'r') as f:
-            cand_summary = f.read()
+
+        try:
+            with open(os.path.join(cand_path, f"{pair_id}.txt"), 'r') as f:
+                cand_summary = f.read()
+        except:
+            continue
 
         if cand_summary != '':
             P, R, F1 = scorer.score([cand_summary], [ref_summary])
@@ -118,8 +125,12 @@ def compute_metrics(test_df, cand_path, name):
     for i, row in tqdm(test_df.iterrows(), total=len(test_df), desc='Calculating MEDCON'):
         ref_summary = row['SUMMARY']
         pair_id = row['PAIR_ID']
-        with open(os.path.join(cand_path, f"{pair_id}.txt"), 'r') as f:
-            cand_summary = f.read()
+
+        try:
+            with open(os.path.join(cand_path, f"{pair_id}.txt"), 'r') as f:
+                cand_summary = f.read()
+        except:
+            continue
         
         ref_matches = matcher.match(ref_summary, ignore_syntax=True)
         cand_matches = matcher.match(cand_summary, ignore_syntax=True)

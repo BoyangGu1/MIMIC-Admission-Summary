@@ -12,8 +12,15 @@ unsloth_DPO_models/
 unsloth_SFT_models/
 vllm_DPO_models/
 vllm_SFT_models/
+mask_dfs/
+medcat_extraction/
+rewrite_responses/
+unsloth_rewriting_SFT_models/
+vllm_rewriting_SFT_models/
 # *.json
+wandb*
 temp.sh
+temp*
 DPO_rejected_prep.sh
 
 # Byte-compiled / optimized / DLL files

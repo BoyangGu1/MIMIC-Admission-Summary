@@ -170,8 +170,8 @@ def main():
         remove_columns=original_columns
     )
 
-    train_dataset = train_dataset.filter(get_count_tokens_func(tokenizer))
-    val_dataset = val_dataset.filter(get_count_tokens_func(tokenizer))
+    train_dataset = train_dataset.filter(get_count_tokens_func(tokenizer, dpo_config.max_prompt_length))
+    val_dataset = val_dataset.filter(get_count_tokens_func(tokenizer, dpo_config.max_prompt_length))
 
     training_args = TrainingArguments(
             per_device_train_batch_size=training_config.per_device_train_batch_size,

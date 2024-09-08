@@ -1,0 +1,48 @@
+
+{
+    "model_name" : "unsloth_SFT_models/sft_para3",
+    "max_seq_length" : 32768,
+    "dtype" : null,
+    "load_in_4bit" : true,
+
+    "r" : 64,
+    "target_modules" : ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    "lora_alpha" : 16,
+    "lora_dropout" : 0,
+    "bias" : "none",
+    "use_gradient_checkpointing" : "unsloth",
+    "random_state" : 3407,
+    "use_rslora" : false,
+    "loftq_config" : null,
+
+    "mimic_version" : "mimic-iii",
+    "heading_type" : "hpc",
+    "ref_model_name" : "sft_para3",
+    "tokenizer_name" : "Meta-Llama-3.1-8B_hpc1_32768",
+
+    "per_device_train_batch_size" : 1,
+    "per_device_eval_batch_size" : 1,
+    "gradient_accumulation_steps" : 128,
+    "warmup_ratio" : 0.03,
+    "num_train_epochs" : 5,
+    "eval_strategy" : "epoch",
+    "save_strategy" : "epoch",
+    "group_by_length" : true,
+    "learning_rate" : 1e-6,
+    "logging_steps" : 1,
+    "optim" : "adamw_8bit",
+    "weight_decay" : 0.01,
+    "lr_scheduler_type" : "cosine",
+    "seed" : 3407,
+    "max_grad_norm" : 0.3,
+    "output_dir" : "outputs/dpo_para7",
+
+    "max_prompt_length" : 4096,
+    "max_response_length" : 4096,
+    "ref_model" : null,
+    "beta" : 0.1,
+
+    "wandb_project" : "unsloth-mimic",
+    "wandb_log_model" : "checkpoint",
+    "run_name" : "dpo_para7"
+}

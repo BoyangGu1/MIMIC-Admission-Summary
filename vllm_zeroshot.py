@@ -10,53 +10,6 @@ import ray
 from vllm import LLM, SamplingParams
 
 
-class LLMPredictor:
-
-    def __init__(self, tensor_parallel_size, system_prompt, sampling_params, save_path):
-        # Create an LLM.
-        self.llm = LLM(model="meta-llama/Meta-Llama-3.1-8B-Instruct",
-                       tensor_parallel_size=tensor_parallel_size)
-        self.tokenizer = self.llm.get_tokenizer()
-        self.system_prompt = system_prompt
-        self.sampling_params = sampling_params
-        self.save_path = save_path
-
-    def __call__(self, batch: dict[str, np.ndarray]) -> dict[str, list]:
-        # Generate texts from the prompts.
-        # The output is a list of RequestOutput objects that contain the prompt,
-        # generated text, and other information.
-        conversations = []
-        for text in batch["text"]:
-            conversation = self.tokenizer.apply_chat_template(
-                [
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": text},
-                ],
-                tokenize=False,
-            )
-            conversations.append(conversation)
-        # change that so conversation takes the batch[text]
-        outputs = self.llm.generate(conversations, self.sampling_params)
-
-        prompt: list[str] = []
-        generated_text: list[str] = []
-        for output in outputs:
-            prompt.append(output.prompt)
-            response = ' '.join([o.text for o in output.outputs])
-            generated_text.append('\n'.join(response.split('\n')[2:]))
-
-        # Save the generated text to a file named after the pair_id.
-        pair_ids = batch["PAIR_ID"]
-        for pair_id, one_generated_text in zip(pair_ids, generated_text):
-            filename = os.path.join(self.save_path, f"{pair_id}.txt")
-            with open(filename, "w") as f:
-                f.write(one_generated_text)
-
-        return {
-            "prompt": prompt,
-            "generated_text": generated_text,
-        }
-
 def parse_args() -> tuple[str, str, str]:
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpus", required=True, type=str, help="the gpu indices for this script to run on")
@@ -64,6 +17,58 @@ def parse_args() -> tuple[str, str, str]:
     parser.add_argument("--save_path", required=True, type=str, help="location for saving generated responses, should be a directory")
     args = parser.parse_args()
     return args.gpus, args.csv_path, args.save_path
+
+
+def get_LLMPredictor(tensor_parallel_size, system_prompt, sampling_params, save_path):
+
+    class LLMPredictor:
+
+        def __init__(self):
+            # Create an LLM.
+            self.llm = LLM(model="meta-llama/Meta-Llama-3.1-8B-Instruct",
+                        tensor_parallel_size=tensor_parallel_size)
+            self.tokenizer = self.llm.get_tokenizer()
+            self.system_prompt = system_prompt
+            self.sampling_params = sampling_params
+            self.save_path = save_path
+
+        def __call__(self, batch: dict[str, np.ndarray]) -> dict[str, list]:
+            # Generate texts from the prompts.
+            # The output is a list of RequestOutput objects that contain the prompt,
+            # generated text, and other information.
+            conversations = []
+            for text in batch["text"]:
+                conversation = self.tokenizer.apply_chat_template(
+                    [
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": text},
+                    ],
+                    tokenize=False,
+                )
+                conversations.append(conversation)
+            # change that so conversation takes the batch[text]
+            outputs = self.llm.generate(conversations, self.sampling_params)
+
+            prompt: list[str] = []
+            generated_text: list[str] = []
+            for output in outputs:
+                prompt.append(output.prompt)
+                response = ' '.join([o.text for o in output.outputs])
+                generated_text.append('\n'.join(response.split('\n')[2:]))
+
+            # Save the generated text to a file named after the pair_id.
+            pair_ids = batch["PAIR_ID"]
+            for pair_id, one_generated_text in zip(pair_ids, generated_text):
+                filename = os.path.join(self.save_path, f"{pair_id}.txt")
+                with open(filename, "w") as f:
+                    f.write(one_generated_text)
+
+            return {
+                "prompt": prompt,
+                "generated_text": generated_text,
+            }
+        
+    return LLMPredictor
 
 
 def is_valid_cuda_visible_devices(cuda_str: str) -> bool:
@@ -114,7 +119,7 @@ def main():
     Clinical Notes- {} 
     """
 
-    df = pd.read_csv("/data/bob_files/MIMIC_project_data/dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B-with-DOC_SEP_hpc1_32768/test.csv")
+    df = pd.read_csv(csv_path)
     ds = ray.data.from_pandas(df)
     ds = ds.map(get_create_prompt(user_prompt))
     ds = ds.repartition(128)
@@ -122,9 +127,11 @@ def main():
     resources_kwarg: dict[str, Any] = {}
     resources_kwarg["num_gpus"] = 1
 
+    llm_predictor = get_LLMPredictor(tensor_parallel_size, system_prompt, sampling_params, save_path)
     os.makedirs(save_path, exist_ok=True)
+
     ds = ds.map_batches(
-        LLMPredictor(tensor_parallel_size, system_prompt, sampling_params, save_path),
+        llm_predictor,
         concurrency=num_instances,
         batch_size=32,
         **resources_kwarg,

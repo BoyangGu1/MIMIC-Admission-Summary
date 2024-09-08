@@ -1,6 +1,6 @@
 # MIMIC-Admission-Summary
 
-This repository is served for the presentation and reproduction of the master thesis of Boyang Gu. The project developed a comprehensice dataset for brief hospital course summarization and trained several models to achieve good performance.
+This repository is served for the presentation and reproduction of the master thesis of Boyang Gu. The project developed a comprehensice dataset for brief hospital course summarization and trained several models that achieve good performance.
 
 ## Setup
 
@@ -23,8 +23,15 @@ This repository is served for the presentation and reproduction of the master th
     mkdir umls-2024AA
     mkdir unsloth_DPO_models
     mkdir unsloth_SFT_models
+    mkdir unsloth_rewriting_SFT_models
     mkdir vllm_DPO_models
     mkdir vllm_SFT_models
+    mkdir vllm_rewriting_SFT_models
+    mkdir mask_dfs
+    mkdir medcat_extraction
+    mkdir rewrite_responses
+    mkdir unsloth_rewriting_SFT_models
+    mkdir vllm_rewriting_SFT_models
     ```
 
 2. Follow the instructions at https://mimic.mit.edu/docs/gettingstarted/ and download the MIMIC-III database from https://physionet.org/content/mimiciii/1.4/ then put it under the repository directory.
@@ -46,7 +53,7 @@ This repository is served for the presentation and reproduction of the master th
 
     For detailed instuctions, please refer to https://github.com/Georgetown-IR-Lab/QuickUMLS.
 
-5. Create a MedCAT installation by downloading the UMLS Full model by asking for permisstion at https://uts.nlm.nih.gov/uts/login?service=https://medcat.rosalind.kcl.ac.uk/auth-callback. The model should be named as `umls_self_train_model_pt2ch_3760d588371755d0.zip`. Put it under the folder `medcat_model` and unzip it. Then download the 2022AA UMLS `MRCONSO.RRF` and `MRSTY.RRF` files from https://www.nlm.nih.gov/research/umls/licensedcontent/umlsarchives04.html.
+5. Create a MedCAT installation by downloading the UMLS Full model by asking for permisstion at https://uts.nlm.nih.gov/uts/login?service=https://medcat.rosalind.kcl.ac.uk/auth-callback. The model should be named as `umls_self_train_model_pt2ch_3760d588371755d0.zip`. Put it under the folder `medcat_model` and unzip it. Then download the 2022AA UMLS `MRCONSO.RRF` and `MRSTY.RRF` files from https://www.nlm.nih.gov/research/umls/licensedcontent/umlsarchives04.html and also put them under the folder `medcat_model`.
 
     For detailed instuctions, please refer to https://github.com/CogStack/MedCAT.
 
@@ -71,6 +78,7 @@ MIMIC-Admission-Summary
 ├── quickumls_install
 │   ├── ...
 ├── umls-2024AA
+│   ├── MRCONSO.RRF
 │   ├── MRSTY.RRF
 ├── ...
 ```
@@ -115,7 +123,7 @@ python one_admission_data_prep.py
     python DPO_train.py DPO_training_paras/dpo_para1.json
     ```
 
-    You can change `dpo_para1.json` into `dpo_para2.json`, `dpo_para3.json`, `dpo_para4.json`, or `dpo_para5.json` to train different models. `DPO_rejected_prep.py` supports multi-GPU settings so feel free to change the `gpus` argument to `0,1,2,3,4,5,6,7` for example.
+    You can change `dpo_para1.json` into `dpo_para2.json`, `dpo_para3.json`, `dpo_para4.json`, or `dpo_para5.json` to train different models. `DPO_rejected_prep.py` supports multi-GPU settings so feel free to change the `gpus` argument to `0,1,2,3,4,5,6,7` for example. Sometimes due to different cuda initialization method, you may need to set `CUDA_VISIBLE_DEVICES` first to ensure multi-GPU inference (e.g., `CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` for example).
 
 4. Inference for the trained models (`sft_para1` for example):
 
@@ -123,13 +131,13 @@ python one_admission_data_prep.py
     conda activate unsloth_env
     python unsloth2vllm.py \
         --model_name unsloth_SFT_models/sft_para1 \
-        --vllm_save_path vllm_SFT_models/sft_model1
+        --vllm_save_path vllm_SFT_models/sft_para1
     conda deactivate
     conda activate vllm_env
     python vllm_inference.py \
-        --model_name vllm_SFT_models/sft_model1 \
+        --model_name vllm_SFT_models/sft_para1 \
         --gpus 0 \
-        --csv_path dataset/mimic-iii/by_hpc/test.csv
+        --csv_path dataset/mimic-iii/by_hpc/test.csv \
         --prompt_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/prompt.txt \
         --save_path inference/mimic-iii/by_hpc/sft_para1
     ```
@@ -150,14 +158,96 @@ python one_admission_data_prep.py
 
 6. Cloze-form rewriting:
 
-    TODO
+    6.1 MedCAT extraction:
+
+    ```
+    conda activate mimic_env
+    python medcat_extraction.py \
+        --dataset_path dataset/mimic-iii/by_hpc/train_val.csv \
+        --save_path dataset/mimic-iii/by_hpc/medcat_extraction_train_val 
+    python medcat_extraction.py \
+        --dataset_path dataset/mimic-iii/by_hpc/test.csv \
+        --save_path dataset/mimic-iii/by_hpc/medcat_extraction_test
+    ```
+
+    6.2 Training datasets preparation:
+
+    ```
+    conda activate mimic_env
+    python rewrite_cloze_data_prep.py \
+        --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/train.csv \
+        --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_train_val \
+        --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
+        --save_name train
+    python rewrite_cloze_data_prep.py \
+        --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/val.csv \
+        --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_train_val \
+        --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
+        --save_name val
+    python rewrite_cloze_data_prep.py \
+        --dataset_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/test.csv \
+        --medcat_extraction_dir dataset/mimic-iii/by_hpc/medcat_extraction_test \
+        --save_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768 \
+        --save_name test
+    ```
+
+    6.3 SFT-based rewriting training:
+
+    ```
+    conda activate unsloth_env
+    python rewrite_SFT_train.py rewrite_SFT_training_paras/rewrite_sft_para1.json
+    ```
+
+    6.4 Rewriting inference:
+
+        6.4.1 SFT-based rewriting (use `rewrite_sft_para1` to rewrite `sft_para1' for example):
+
+        ```
+        conda activate unsloth_env
+        python unsloth2vllm.py \
+            --model_name unsloth_rewriting_SFT_models/rewrite_sft_para1 \
+            --vllm_save_path vllm_rewriting_SFT_models/rewrite_sft_para1
+        conda deactivate
+        conda activate medcat_env
+        python medcat_extraction.py \
+            --summary_path inference/mimic-iii/by_hpc/sft_para1 \
+            --save_path medcat_extraction/mimic-iii/by_hpc/sft_para1
+        conda deactivate
+        conda activate mimic_env
+        python rewrite_model_based_inference.py \
+            --gpus 0 \
+            --ref_pairs_csv dataset/mimic-iii/by_hpc/test.csv \
+            --ref_summary_path inference/mimic-iii/by_hpc/sft_para1 \
+            --save_path inference/mimic-iii/by_hpc/sft_para1_maskall_with_rewrited_by_rewrite_para1 \
+            --save_medcat_extraction_path medcat_extraction/mimic-iii/by_hpc/sft_para1 \
+            --save_mask_dfs_save_path mask_dfs/mimic-iii/by_hpc/sft_para1 \
+            --rewrite_model vllm_rewriting_SFT_models/rewrite_sft_para1 \
+            --save_rewrite_response_name rewrite_responses/mimic-iii/by_hpc/sft_para1_maskall_with_rewrited_by_rewrite_para1
+        ```
+
+        6.4.2 Few-shot training-free rewriting (rewriting `sft_para1` for example):
+
+        ```
+        conda activate vllm_env
+        python rewrite_fewshot_inference.py \
+            --gpus 0 \
+            --shots 0 \
+            --ref_pairs_csv dataset/mimic-iii/by_hpc/test.csv \
+            --ref_summary_path inference/mimic-iii/by_hpc/sft_para1 \
+            --save_path inference/mimic-iii/by_hpc/sft_para1_maskall_with_rewrited_by_0shots \
+            --save_medcat_extraction_path medcat_extraction/mimic-iii/by_hpc/sft_para1 \
+            --save_mask_dfs_save_path mask_dfs/mimic-iii/by_hpc/sft_para1 \
+            --save_rewrite_response_name rewrite_responses/mimic-iii/by_hpc/sft_para1_maskall_with_rewrited_by_0shot
+        ```
+
+    The inferece supports multi-GPU settings too.
 
 7. Compute metrics (`sft_para1` for example):
 
     ```
     conda activate mimic_env
     python compute_metrics.py \
-        --ref_path MIMIC_project_data/dataset/mimic-iii/by_hpc/test.csv
+        --ref_path dataset/mimic-iii/by_hpc/test.csv \
         --cand_path inference/mimic-iii/by_hpc/sft_para1 \
         --save_name sft_para1
     ```
