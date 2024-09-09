@@ -109,7 +109,7 @@ By the restriction of the license of MIMIC database, we cannot provide the proce
     2.2. Direct Preference Optimization (DPO):
 
     ```
-    conda activate vllm_env
+    conda activate mimic_env
     python DPO_rejected_prep.py \
         --gpus 0 \
         --csv_path dataset/mimic-iii/by_hpc/Meta-Llama-3.1-8B_hpc1_32768/train.csv \
@@ -133,7 +133,7 @@ By the restriction of the license of MIMIC database, we cannot provide the proce
         --model_name unsloth_SFT_models/sft_para1 \
         --vllm_save_path vllm_SFT_models/sft_para1
     conda deactivate
-    conda activate vllm_env
+    conda activate mimic_env
     python vllm_inference.py \
         --model_name vllm_SFT_models/sft_para1 \
         --gpus 0 \
@@ -147,7 +147,7 @@ By the restriction of the license of MIMIC database, we cannot provide the proce
 4. Zero-shot inference:
 
     ```
-    conda activate vllm_env
+    conda activate mimic_env
     python vllm_zeroshot.py \
         --gpus 0 \
         --csv_path dataset/mimic-iii/by_hpc/test.csv \
@@ -228,7 +228,7 @@ By the restriction of the license of MIMIC database, we cannot provide the proce
     5.4.2 Few-shot training-free rewriting (rewriting `sft_para1` for example):
 
         ```
-        conda activate vllm_env
+        conda activate mimic_env
         python rewrite_fewshot_inference.py \
             --gpus 0 \
             --shots 0 \
